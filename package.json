@@ -20,6 +20,7 @@
     "ws": "^8.13.0"
   },
   "devDependencies": {
+    "jest": "^29.6.2",
     "nodemon": "^1.14.9"
   }
 }

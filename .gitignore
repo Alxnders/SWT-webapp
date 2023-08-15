@@ -1,5 +1,6 @@
 server/raw/*
 server/data/*
+server/logs/*
 
 !server/raw/f10.2.2.34/
 !server/data/f10.2.2.34/
