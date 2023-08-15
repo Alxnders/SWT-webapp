@@ -20,7 +20,8 @@ const logFormat = winston.format.combine(
   winston.format.timestamp(),
   winston.format.printf(({ timestamp, level, message }) => {
     return `${timestamp} [${level.toUpperCase()}]: ${message}`;
-  })
+  }),
+  winston.format.errors({ stack: true }) // This will include error stack traces in the logs
 );
 
 // Get the current date in the format YYYY-MM-DD_HH-MM-SS
@@ -42,6 +43,14 @@ console.log = (...args) => {
   const logMessage = args.map(arg => JSON.stringify(arg)).join(' ');
   logger.info(logMessage);
   originalConsoleLog(...args);
+};
+
+// Redirect console error output to logger
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  const logMessage = args.map(arg => JSON.stringify(arg)).join(' ');
+  logger.error(logMessage);
+  originalConsoleError(...args);
 };
 
 // Serve static files from the public directory
