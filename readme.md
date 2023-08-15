@@ -28,7 +28,7 @@ Make sure you have the following software installed on your machine:
 
 The directory structure of the project is as follows:
 
-# Backend
+# Backend (outdated)
 - `server/`: The directory containing all the server side components for the webapp.
 - `server/server.js`: The Node.js server file that handles the routing and serves the webapp.
 - `server/parse.js`: Js file that selects how to handle a given file, .dat or .csv.
@@ -40,7 +40,7 @@ The directory structure of the project is as follows:
 - `server/raw/`: The directory where all the raw files from each machine is copied, each machine has its own file saved in the raw directory.
 - `server/data/`: The directory where all the processed data files are stored, they are processed from the raw files into json format.
 
-# Frontend
+# Frontend (outdated)
 - `public/`: The directory containing static files, such as HTML, CSS, JavaScript, and images.
 - `public/index.html`: The main HTML file for the webpage.
 - `public/style/`: The directory containing CSS files.
