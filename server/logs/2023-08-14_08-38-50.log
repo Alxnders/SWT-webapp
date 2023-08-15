@@ -1,0 +1,20 @@
+2023-08-14T08:38:50.552Z [INFO]: Server is running on http://10.1.1.9:3000
+2023-08-14T08:38:50.555Z [INFO]: "Machine names saved to JSON successfully."
+2023-08-14T08:38:50.558Z [INFO]: "Processing directory: server/data/f10.2.2.34"
+2023-08-14T08:38:52.922Z [INFO]: "Done"
+2023-08-14T08:38:52.922Z [INFO]: "Processing directory: server/data/f10.2.2.40"
+2023-08-14T08:38:59.133Z [INFO]: "Done"
+2023-08-14T08:38:59.134Z [INFO]: "Processing directory: server/data/f10.2.2.41"
+2023-08-14T08:39:04.357Z [INFO]: "Done"
+2023-08-14T08:39:04.357Z [INFO]: "Processing directory: server/data/f10.2.2.42"
+2023-08-14T08:39:08.170Z [INFO]: "Done"
+2023-08-14T08:39:08.170Z [INFO]: "Processing directory: server/data/f10.2.2.44"
+2023-08-14T08:39:08.171Z [INFO]: "Done"
+2023-08-14T08:39:08.171Z [INFO]: "Processing directory: server/data/f10.2.2.80"
+2023-08-14T08:39:08.174Z [INFO]: "Done"
+2023-08-14T08:39:58.425Z [INFO]: WebSocket client connected with id: ee5c2cdb-9dd7-4a51-82b6-8c19277b1c89
+2023-08-14T08:40:02.900Z [INFO]: Received message from client:
+2023-08-14T08:40:06.805Z [INFO]: Python script output: Plot image saved: /home/user/Desktop/webapp/server/img/plot.png
+
+2023-08-14T08:40:06.854Z [INFO]: "Python script exited with code 0"
+2023-08-14T08:40:06.855Z [INFO]: message sent to client ee5c2cdb-9dd7-4a51-82b6-8c19277b1c89 : /image/plot.png

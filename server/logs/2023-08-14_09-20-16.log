@@ -1,0 +1,14 @@
+2023-08-14T09:20:16.834Z [INFO]: Server is running on http://10.1.1.9:3000
+2023-08-14T09:20:16.837Z [INFO]: Server starting done.
+2023-08-14T09:20:16.840Z [INFO]: "Processing directory: server/data/f10.2.2.34"
+2023-08-14T09:20:18.934Z [INFO]: "Done processing server/data/f10.2.2.34"
+2023-08-14T09:20:18.935Z [INFO]: "Processing directory: server/data/f10.2.2.40"
+2023-08-14T09:20:25.043Z [INFO]: "Done processing server/data/f10.2.2.40"
+2023-08-14T09:20:25.044Z [INFO]: "Processing directory: server/data/f10.2.2.41"
+2023-08-14T09:20:30.313Z [INFO]: "Done processing server/data/f10.2.2.41"
+2023-08-14T09:20:30.314Z [INFO]: "Processing directory: server/data/f10.2.2.42"
+2023-08-14T09:20:34.141Z [INFO]: "Done processing server/data/f10.2.2.42"
+2023-08-14T09:20:34.142Z [INFO]: "Processing directory: server/data/f10.2.2.44"
+2023-08-14T09:20:34.142Z [INFO]: "Done processing server/data/f10.2.2.44"
+2023-08-14T09:21:32.161Z [INFO]: New WebSocket client connected with id: fd665de7-41dd-40a3-9cdc-19726a3fd876
+2023-08-14T09:21:39.722Z [INFO]: Received message from client : {"plot":"plot2","xSelected":"time","ySelected":"ec","ySelected2":"cur","clientId":"fd665de7-41dd-40a3-9cdc-19726a3fd876"}

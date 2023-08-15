@@ -1,0 +1,121 @@
+body {
+  margin: 0;
+  padding: 0;
+  width:100vw;
+}
+
+header {
+  background-color: #e1e2ec;
+}
+
+#headDiv {
+
+  margin-left: 1%;
+  padding-bottom: 1%;
+}
+
+h1 {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 1%; /* Adjust the margin as needed */
+  margin-top: 1.5%;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#logo {
+  width: 8%;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 6% 6% 6% 6%; /* Two columns with equal width */
+  gap: 20px; /* Spacing between grid cells */
+}
+
+.grid-item {
+  text-align: center;
+}
+
+#ncycles {
+  margin-top: 3%;
+}
+
+select {
+  width: 100%; /* Adjust the width of the dropdowns */
+  box-sizing: border-box; /* Include padding and border in the width calculation */
+  text-align: center;
+}
+
+body {
+  background-color: #f0f8ff
+}
+
+
+.chartdiv {
+  position: relative;
+  width: 80%;
+  height: 1000px; /* Adjust the height as desired */
+  border: 1px dotted #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  margin-left: 10%;
+}
+
+.chartdiv .plus-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.chartdiv .dropdowns {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chartdiv .dropdowns select {
+  margin-bottom: 5px;
+}
+
+.chartdiv .go-button {
+  margin-bottom: 10px;
+}
+
+
+.chartdiv .reset-zoom-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: #fff;
+  padding: 5px 10px;
+}
+
+#minus-button {
+  position: absolute;
+  top: 1.5%;
+  right: .5%;
+
+}.cClass {
+  height: 90% !important;
+}
+
+#imageIdDelta {
+  width: auto;
+  height: 90%;
+}
+#imageId {
+  width: auto;
+  height: 70%;
+}

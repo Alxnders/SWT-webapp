@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SWT WebApp</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/index.js" type="module" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<header>
+  <div id="headDiv">
+    <img src="img/swt.png" alt="SWT Logo" id="logo">
+    <h1>WebApp</h1>
+
+    <div class="grid-container">
+      <div class="grid-item">
+        <h2>Date</h2>
+        <select id="dayDropdown">
+          <option value="Placeholder">Dates</option>
+        </select>
+      </div>
+      <div class="grid-item">
+        <h2>Machine</h2>
+        <select id="machineDropdown">
+          <option value="Placeholder">Machines</option>
+        </select>
+      </div>
+      <div class="grid-item">
+        <h2>Length</h2>
+        <select id="lengthDropdown">
+          <option value="Placeholder">Plot length</option>
+        </select>
+      </div>
+      <div class ="grid-item">
+        <button id="cycleButton">Number of cycles</button>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<body>
+
+<div id="chart1" class="chartdiv"></div>
+</body>
+
+</html>

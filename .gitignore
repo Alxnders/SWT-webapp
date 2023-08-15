@@ -1,0 +1,6 @@
+server/raw/*
+server/data/*
+
+!server/raw/f10.2.2.34/
+!server/data/f10.2.2.34/
+!server/data/machines.js
