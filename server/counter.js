@@ -17,7 +17,7 @@ async function count(machineName, startDate) {
     const readFile = promisify(fs.readFile);
     const fileContent = await readFile(filePath, 'utf8');
   
-    console.log('counting');
+    console.log(`Starting count on ${machineName}..`);
   
     
     let previousPhase = null;
@@ -38,13 +38,12 @@ async function count(machineName, startDate) {
       }
     });
   
-    console.log(`The machine has gone through the pr-deionize phase ${counter} times since ${startDate}.`);
+    console.log(`The machine has gone through the pr-deionize phase ${counter} times since ${startDate}, sending to client.`);
   } catch (error) {
     console.error('Error reading file:', error);
     throw error;
   }
-
-  console.log('Cycle count:', counter);
+  
   return counter;
 }
 
