@@ -3,13 +3,46 @@ const app = express();
 const path = require('path');
 const fs = require('fs');
 const WebSocket = require('ws');
+const winston = require('winston');
 const { v4: uuidv4 } = require('uuid');
 const { saveMachineNamesToJson } = require('./machineUtils');
 const { processDirectories } = require('./process.js');
 const { count } = require('./counter');
 const { spawn } = require('child_process');
 
+//Logs
+const logsDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}
 
+const logFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.printf(({ timestamp, level, message }) => {
+    return `${timestamp} [${level.toUpperCase()}]: ${message}`;
+  })
+);
+
+// Get the current date in the format YYYY-MM-DD_HH-MM-SS
+const currentDate = new Date().toISOString().replace(/:/g, '-').replace(/T/g, '_').split('.')[0];
+
+// Create a logger that outputs to the console and log file using winston
+const logger = winston.createLogger({
+  level: 'info',
+  format: logFormat,
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: path.join(logsDir, `${currentDate}.log`) })
+  ]
+});
+
+// Redirect console output to logger
+const originalConsoleLog = console.log;
+console.log = (...args) => {
+  const logMessage = args.map(arg => JSON.stringify(arg)).join(' ');
+  logger.info(logMessage);
+  originalConsoleLog(...args);
+};
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -91,13 +124,13 @@ app.get('/image/:filename', (req, res) => {
   // Send the image file as the response
   res.sendFile(imagePath);
 });
-
+//-----------------------
 
 // Start the server port 3000
 const port = process.env.PORT || 3000;
 const ipAddress = '10.1.1.9';
 const server = app.listen(port, ipAddress, () => {
-  console.log(`Server is running on http://${ipAddress}:${port}`);
+  logger.info(`Server is running on http://${ipAddress}:${port}`);
   processDirectories('server/data');
   saveMachineNamesToJson();
 });
@@ -111,7 +144,13 @@ wss.on('connection', (ws) => {
   const clientId = uuidv4();
   ws.clientId = clientId;
 
-  console.log('WebSocket client connected with id: ' + clientId);
+  targetDate = '';
+  targetMachine = 'f10.2.2.34';
+  length_int=1;
+  datesFilePath = path.join('server/data',targetMachine,'dates.json');
+  targetDate = '';
+
+  logger.info('WebSocket client connected with id: ' + clientId);
 
   // Send the client ID to the frontend
   
@@ -119,7 +158,7 @@ wss.on('connection', (ws) => {
 
   // WebSocket message handling
   ws.on('message', (message) => {
-    console.log('Received message from client:', message);
+    logger.info('Received message from client: '+ message);
 
     // Parse the received message as JSON
     const parsedMessage = JSON.parse(message);
@@ -135,7 +174,7 @@ wss.on('connection', (ws) => {
 
       datesFilePath = path.join('server/data',targetMachine,'dates.json');
 
-      console.log(parsedMessage.clientId+' has changed the targetMachine :'+targetMachine);
+      logger.info(parsedMessage.clientId+' has changed the targetMachine :'+targetMachine);
       sendToClient(parsedMessage.clientId, 'refreshdates'); 
     }
     
@@ -172,9 +211,6 @@ wss.on('connection', (ws) => {
           if (targetIndex !== -1 && targetIndex + 1 < dates.length) {
             const endDateIndex = targetIndex + length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
-
-            console.log(`Target Date: ${targetDate}`);
-            console.log(`End Date: ${endDate}`);
     
             const dataFilePath = `server/data/${targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/ec_delta4.py';
@@ -231,9 +267,6 @@ wss.on('connection', (ws) => {
             const endDateIndex = targetIndex + length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
             
-            console.log(`Target Date: ${targetDate}`);
-            console.log(`End Date: ${endDate}`);
-            
             const dataFilePath = `server/data/${targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/plot.py';
             
@@ -251,7 +284,7 @@ wss.on('connection', (ws) => {
             ]);
 
             pythonProcess.stdout.on('data', (data) => {
-              console.log(`Python script output: ${data}`);
+              logger.info(`Python script output: ${data}`);
             });
 
             pythonProcess.stderr.on('data', (data) => {
@@ -299,17 +332,12 @@ wss.on('connection', (ws) => {
             const endDateIndex = targetIndex + length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
     
-            console.log(`Target Date: ${targetDate}`);
-            console.log(`End Date: ${endDate}`);
-    
             const dataFilePath = `server/data/${targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/plot.py';
     
             const xaxis = parsedMessage.xSelected;
             const yaxis = parsedMessage.ySelected;
             const y2axis = parsedMessage.ySelected2; // Include the optional second y-axis
-            console.log(yaxis);
-            console.log(y2axis);
     
             const pythonProcess = spawn('python', [
               pythonScriptPath,
@@ -324,7 +352,7 @@ wss.on('connection', (ws) => {
             ]);
 
             pythonProcess.stdout.on('data', (data) => {
-              console.log(`Python script output: ${data}`);
+              logger.info(`Python script output: ${data}`);
             });
     
             pythonProcess.stderr.on('data', (data) => {
@@ -332,7 +360,7 @@ wss.on('connection', (ws) => {
             });
     
             pythonProcess.on('close', (code) => {
-              console.log(`Python script exited with code ${code}`);
+              logger.info(`Python script exited with code ${code}`);
               if(code != 0) {
                 sendToClient(parsedMessage.clientId, `Error : Target date '${targetDate}' or corresponding end date not found in dates.json`)
               }
@@ -362,18 +390,18 @@ wss.on('connection', (ws) => {
     }
 
     else {
-      console.log('Invalid message received:', parsedMessage);
+      logger.info('Invalid message received:', parsedMessage);
     }
   });
 
   // WebSocket connection closing
   ws.on('close', () => {
-    targetDate;
+    targetDate = '';
     targetMachine = 'f10.2.2.34';
     length_int=1;
     datesFilePath = path.join('server/data',targetMachine,'dates.json');
     targetDate = '';
-    console.log('WebSocket client disconnected');
+    logger.info('WebSocket client disconnected, reseting var values ');
   });
 });
 
@@ -382,7 +410,7 @@ const sendToClient = (clientId, message) => {
   wss.clients.forEach((client) => {
     if (client.clientId === clientId && client.readyState === WebSocket.OPEN) {
       client.send(message);
-      console.log('message sent to : '+clientId);
+      logger.info('message sent to client '+clientId +' : '+message);
     }
   });
 };
@@ -392,6 +420,7 @@ const broadcast = (message) => {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
+      logger.info('message broadcasted to all clients : '+message)
     }
   });
 };
