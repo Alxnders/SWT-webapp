@@ -48,5 +48,4 @@ The directory structure of the project is as follows:
 - `public/img/`: The directory containing image files.
 
 # Author
-Alexander SAUVIGNET
-alexander.sauvignet@stockholmwater.com
+Alexander SAUVIGNET alexander.sauvignet@stockholmwater.com
