@@ -36,6 +36,7 @@ for i, v in enumerate(header):
 
 xaxis_name = args.xaxis
 yaxis_name = args.yaxis
+cond = False
 
 for l in r:
     current_date = datetime.datetime.strptime(l[h['time']], '%Y-%m-%d %H:%M:%S').date()
@@ -51,6 +52,7 @@ for l in r:
             y.append(datetime.datetime.strptime(l[h['time']], '%Y-%m-%d %H:%M:%S'))
         elif yaxis_name == 'phase' :
             y.append(l[h[yaxis_name]])
+            cond = True
         else :
             y.append(float(l[h[yaxis_name]]))
 
@@ -90,8 +92,9 @@ if len(y) > 0:
     ax.set_xlabel(xaxis_name)
     ax.set_ylabel(yaxis_name)
 
-    min_y = min(y)
-    ax.set_ylim(bottom=min(0, min_y+5*(min_y/100)))
+    if not cond :
+        min_y = min(y)
+        ax.set_ylim(bottom=min(0, min_y+5*(min_y/100)))
 
     ax.grid(axis='y')
     ax.yaxis.set_major_locator(ticker.MaxNLocator(20))

@@ -21,7 +21,7 @@ const logFormat = winston.format.combine(
   winston.format.printf(({ timestamp, level, message }) => {
     return `${timestamp} [${level.toUpperCase()}]: ${message}`;
   }),
-  winston.format.errors({ stack: true }) // This will include error stack traces in the logs
+  winston.format.errors({ stack: true }) 
 );
 
 // Get the current date in the format YYYY-MM-DD_HH-MM-SS
@@ -62,7 +62,7 @@ app.get('/', (req, res) => {
 });
 
 let targetDate = '';
-let targetMachine = 'f10.2.2.34'; //by default the first default machine shall be 34, not super clean
+let targetMachine = ''; 
 let length_int = 1; //length of the data to display, initialized at 1 day
 
 let datesFilePath = path.join('server/data',targetMachine,'dates.json');
@@ -81,6 +81,7 @@ app.get('/dates', (req, res) => {
           targetDate = dates[0];
         }
         res.json(dates);
+        logger.info("Fetched dates succesfully")
       } catch (error) {
         console.error('Error parsing dates data:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -100,7 +101,11 @@ app.get('/machines', (req, res) => {
     } else {
       try {
         const machines = JSON.parse(data);
+        if (machines.length > 0) {
+          targetMachine = machines[0];
+        }
         res.json(machines);
+        logger.info("Feteched machines succesfully")
       } catch (error) {
         console.error('Error parsing machine names data:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -112,28 +117,51 @@ app.get('/machines', (req, res) => {
 // Route to fetch the loading gif
 app.get('/loading', (req, res) => {
   const loadingPath = path.join(__dirname, 'img', 'loading.gif');
-
-  // Send the loading gif as the response
   res.sendFile(loadingPath);
+  logger.info("Feteched loading img succesfully")
 });
 
 // Route to fetch the error icon
 app.get('/error', (req, res) => {
   const loadingPath = path.join(__dirname, 'img', 'error.png');
-
-  // Send the loading gif as the response
   res.sendFile(loadingPath);
+  logger.info("Feteched error img succesfully")
 });
 
 // Route to fetch a specific image (py plots)
 app.get('/image/:filename', (req, res) => {
   const filename = req.params.filename;
   const imagePath = path.join(__dirname, 'img', filename);
-  
-  // Send the image file as the response
   res.sendFile(imagePath);
+  logger.info("Feteched plot img succesfully")
 });
+
 //-----------------------
+
+
+// Function needed for when a new user connects
+const resetTargetMachine = () => {
+  const machinesFilePath = 'server/data/machines.json';
+  fs.readFile(machinesFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    try {
+      const machines = JSON.parse(data);
+      if (machines.length > 0) {
+        targetMachine = machines[0];
+        datesFilePath = path.join('server/data', targetMachine, 'dates.json');
+        logger.info('Reset targetMachine to: ' + targetMachine);
+      }
+    } catch (error) {
+      console.error('Error parsing machine names data:', error);
+    }
+  });
+};
+
+
 
 // Start the server port 3000
 const port = process.env.PORT || 3000;
@@ -154,10 +182,8 @@ wss.on('connection', (ws) => {
   ws.clientId = clientId;
 
   targetDate = '';
-  targetMachine = 'f10.2.2.34';
+  resetTargetMachine();
   length_int=1;
-  datesFilePath = path.join('server/data',targetMachine,'dates.json');
-  targetDate = '';
 
   logger.info('WebSocket client connected with id: ' + clientId);
 
@@ -406,7 +432,7 @@ wss.on('connection', (ws) => {
   // WebSocket connection closing
   ws.on('close', () => {
     targetDate = '';
-    targetMachine = 'f10.2.2.34';
+    resetTargetMachine();
     length_int=1;
     datesFilePath = path.join('server/data',targetMachine,'dates.json');
     targetDate = '';
