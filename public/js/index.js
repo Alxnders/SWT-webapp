@@ -39,7 +39,7 @@ async function loadApp() {
   await fetchMachines();
 
   //Pop the droplists
-  populateDropdown(datesData, Id, socket);
+  populateDropdown(datesData, Id, socket, true);
   populateMachinesDropdown(machinesData, Id, socket);
   populateLength(Id, socket);
 
@@ -78,7 +78,7 @@ socket.addEventListener('message', (event) => {
   else if (event.data === 'refreshdates') {
     console.log('Fetching dates');
     fetchDates().then(() => {
-      populateDropdown(datesData, Id);
+      populateDropdown(datesData, Id, socket, false);
     });
   }
 

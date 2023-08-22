@@ -140,7 +140,7 @@ app.get('/image/:filename', (req, res) => {
 
 
 // Function needed for when a new user connects
-const resetTargetMachine = () => {
+const resetTargetMachine = (id) => {
   const machinesFilePath = 'server/data/machines.json';
   fs.readFile(machinesFilePath, 'utf8', (err, data) => {
     if (err) {
@@ -151,11 +151,32 @@ const resetTargetMachine = () => {
     try {
       const machines = JSON.parse(data);
       if (machines.length > 0) {
-        targetMachine = machines[0];
-        datesFilePath = path.join('server/data', targetMachine, 'dates.json');
-        logger.info('Reset targetMachine to: ' + targetMachine);
+        userTargetValues[id].targetMachine = machines[0];
+        datesFilePath = path.join('server/data', userTargetValues[id].targetMachine, 'dates.json');
+
+        fs.readFile(datesFilePath, 'utf8', (err, data) => { //also reduce to func
+          if (err) {
+            console.error(err);
+            return;
+          }
+      
+          try {
+            const dates = JSON.parse(data);
+            if (dates.length > 0) {
+              userTargetValues[id].targetDate = dates[0];
+              logger.info('Reset targetDate to: ' + userTargetValues[id].targetDate);
+            }
+          } 
+          catch (error) {
+            console.error('Error parsing machine names data:', error);
+          }
+        });
+
+        
+        logger.info('Reset targetMachine to: ' + userTargetValues[id].targetMachine);
       }
-    } catch (error) {
+    } 
+    catch (error) {
       console.error('Error parsing machine names data:', error);
     }
   });
@@ -175,6 +196,7 @@ const server = app.listen(port, ipAddress, () => {
 
 // Create a WebSocket server for front to back communication
 const wss = new WebSocket.Server({ server });
+const userTargetValues = {};
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
@@ -182,8 +204,14 @@ wss.on('connection', (ws) => {
   ws.clientId = clientId;
 
   targetDate = '';
-  resetTargetMachine();
+  resetTargetMachine(clientId);
   length_int=1;
+
+  userTargetValues[clientId] = {
+    targetDate: '',
+    targetMachine: '',
+    length_int: 1,
+  };
 
   logger.info('WebSocket client connected with id: ' + clientId);
 
@@ -201,13 +229,34 @@ wss.on('connection', (ws) => {
     if (parsedMessage.date !== undefined) {
       const { date } = parsedMessage;
       targetDate = date;
+
+      userTargetValues[parsedMessage.clientId].targetDate = date;
     }
 
     else if (parsedMessage.machine !== undefined) {
       const { machine } = parsedMessage;
       targetMachine = machine;
 
+      userTargetValues[parsedMessage.clientId].targetMachine=machine;
+
       datesFilePath = path.join('server/data',targetMachine,'dates.json');
+      fs.readFile(datesFilePath, 'utf8', (err, data) => { //reduce to func
+        if (err) {
+          console.error(err);
+          return;
+        }
+    
+        try {
+          const dates = JSON.parse(data);
+          if (dates.length > 0) {
+            userTargetValues[parsedMessage.clientId].targetDate = dates[0];
+            logger.info('Set targetDate to: ' + userTargetValues[parsedMessage.clientId].targetDate);
+          }
+        } 
+        catch (error) {
+          console.error('Error parsing machine names data:', error);
+        }
+      });
 
       logger.info(parsedMessage.clientId+' has changed the targetMachine :'+targetMachine);
       sendToClient(parsedMessage.clientId, 'refreshdates'); 
@@ -228,7 +277,7 @@ wss.on('connection', (ws) => {
 
     else if (parsedMessage.plot == "ec_delta") {
       // Get the path to the dates.json file
-      const datesFilePath = `server/data/${targetMachine}/dates.json`;
+      const datesFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/dates.json`;
     
       // Read the dates.json file
       fs.readFile(datesFilePath, 'utf8', (err, data) => {
@@ -241,16 +290,16 @@ wss.on('connection', (ws) => {
           const dates = JSON.parse(data);
     
           // Find the index of the targetDate
-          const targetIndex = dates.findIndex(date => date === targetDate);
+          const targetIndex = dates.findIndex(date => date === userTargetValues[parsedMessage.clientId].targetDate);
     
           if (targetIndex !== -1 && targetIndex + 1 < dates.length) {
-            const endDateIndex = targetIndex + length_int;
+            const endDateIndex = targetIndex + userTargetValues[parsedMessage.clientId].length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
     
-            const dataFilePath = `server/data/${targetMachine}/prep.dat`;
+            const dataFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/ec_delta4.py';
     
-            const pythonProcess = spawn('python', [pythonScriptPath, dataFilePath, targetDate, endDate, targetMachine]);
+            const pythonProcess = spawn('python', [pythonScriptPath, dataFilePath, userTargetValues[parsedMessage.clientId].targetDate, endDate, userTargetValues[parsedMessage.clientId].targetMachine]);
     
             pythonProcess.stdout.on('data', (data) => {
               console.log(`Python script output: ${data}`);
@@ -263,7 +312,7 @@ wss.on('connection', (ws) => {
             pythonProcess.on('close', (code) => {
               console.log(`Python script exited with code ${code}`);
               if(code != 0) {
-                sendToClient(parsedMessage.clientId, `Error : Target date '${targetDate}' or corresponding end date not found in dates.json`)
+                sendToClient(parsedMessage.clientId, `Error : Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`)
               }
               else {
                 const imagePath = '/image/plot.png';
@@ -273,7 +322,7 @@ wss.on('connection', (ws) => {
           } 
           
           else {
-            console.error(`Target date '${targetDate}' or corresponding end date not found in dates.json`);
+            console.error(`Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`);
           }
         } catch (error) {
           console.error(`Error parsing dates.json: ${error}`);
@@ -283,7 +332,11 @@ wss.on('connection', (ws) => {
 
     else if (parsedMessage.plot == "plot") {
       // Get the path to the dates.json file
-      const datesFilePath = `server/data/${targetMachine}/dates.json`;
+      const datesFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/dates.json`;
+
+      console.log("targetDate : " + userTargetValues[parsedMessage.clientId].targetDate);
+      console.log("targetMachine : " + userTargetValues[parsedMessage.clientId].targetMachine);
+      console.log("length : " + userTargetValues[parsedMessage.clientId].length_int);
 
       // Read the dates.json file
       fs.readFile(datesFilePath, 'utf8', (err, data) => {
@@ -295,14 +348,13 @@ wss.on('connection', (ws) => {
         try {
           const dates = JSON.parse(data);
 
-          // Find the index of the targetDate
-          const targetIndex = dates.findIndex((date) => date === targetDate);
+          const targetIndex = dates.findIndex((date) => date === userTargetValues[parsedMessage.clientId].targetDate);
 
           if (targetIndex !== -1 && targetIndex + 1 < dates.length) {
-            const endDateIndex = targetIndex + length_int;
+            const endDateIndex = targetIndex + userTargetValues[parsedMessage.clientId].length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
             
-            const dataFilePath = `server/data/${targetMachine}/prep.dat`;
+            const dataFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/plot.py';
             
             const xaxis = parsedMessage.xSelected;
@@ -311,9 +363,9 @@ wss.on('connection', (ws) => {
             const pythonProcess = spawn('python', [
               pythonScriptPath,
               dataFilePath,
-              targetDate,
+              userTargetValues[parsedMessage.clientId].targetDate,
               endDate,
-              targetMachine,
+              userTargetValues[parsedMessage.clientId].targetMachine,
               xaxis,
               yaxis,
             ]);
@@ -329,7 +381,7 @@ wss.on('connection', (ws) => {
             pythonProcess.on('close', (code) => {
               console.log(`Python script exited with code ${code}`);
               if(code != 0) {
-                sendToClient(parsedMessage.clientId, `Error : Target date '${targetDate}' or corresponding end date not found in dates.json`)
+                sendToClient(parsedMessage.clientId, `Error : Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`)
               }
               else {
                 const imagePath = '/image/plot.png';
@@ -337,8 +389,8 @@ wss.on('connection', (ws) => {
               }
             });
           } else {
-            console.error(`Target date '${targetDate}' or corresponding end date not found in dates.json`);
-            sendToClient(parsedMessage.clientId, `Error : Target date '${targetDate}' or corresponding end date not found in dates.json`)
+            console.error(`Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`);
+            sendToClient(parsedMessage.clientId, `Error : Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`)
           }
         } catch (error) {
           console.error(`Error parsing dates.json: ${error}`);
@@ -348,7 +400,7 @@ wss.on('connection', (ws) => {
 
     else if (parsedMessage.plot == "plot2") {
       // Get the path to the dates.json file
-      const datesFilePath = `server/data/${targetMachine}/dates.json`;
+      const datesFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/dates.json`;
     
       // Read the dates.json file
       fs.readFile(datesFilePath, 'utf8', (err, data) => {
@@ -361,10 +413,10 @@ wss.on('connection', (ws) => {
           const dates = JSON.parse(data);
     
           // Find the index of the targetDate
-          const targetIndex = dates.findIndex((date) => date === targetDate);
+          const targetIndex = dates.findIndex((date) => date === userTargetValues[parsedMessage.clientId].targetDate);
     
           if (targetIndex !== -1 && targetIndex + 1 < dates.length) {
-            const endDateIndex = targetIndex + length_int;
+            const endDateIndex = targetIndex + userTargetValues[parsedMessage.clientId].length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
     
             const dataFilePath = `server/data/${targetMachine}/prep.dat`;
@@ -377,9 +429,9 @@ wss.on('connection', (ws) => {
             const pythonProcess = spawn('python', [
               pythonScriptPath,
               dataFilePath,
-              targetDate,
+              userTargetValues[parsedMessage.clientId].targetDate,
               endDate,
-              targetMachine,
+              userTargetValues[parsedMessage.clientId].targetMachine,
               xaxis,
               yaxis,
               '--yaxis2',
@@ -397,7 +449,7 @@ wss.on('connection', (ws) => {
             pythonProcess.on('close', (code) => {
               logger.info(`Python script exited with code ${code}`);
               if(code != 0) {
-                sendToClient(parsedMessage.clientId, `Error : Target date '${targetDate}' or corresponding end date not found in dates.json`)
+                sendToClient(parsedMessage.clientId, `Error : Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`)
               }
               else {
                 const imagePath = '/image/plot.png';
@@ -405,7 +457,7 @@ wss.on('connection', (ws) => {
               }
             });
           } else {
-            console.error(`Target date '${targetDate}' or corresponding end date not found in dates.json`);
+            console.error(`Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`);
           }
         } catch (error) {
           console.error(`Error parsing dates.json: ${error}`);
@@ -416,12 +468,14 @@ wss.on('connection', (ws) => {
 
     else if(parsedMessage.length != undefined) {
       const length = parsedMessage.length;
+      
       if(length == "day") {length_int=1;}
       else if (length == "week") {length_int=7;}
       else if (length == "month") {length_int=30;}
       else if (length == "3 months") {length_int=90;}
       else if (length == "6 months") {length_int=180;}
       else if (length == "year") {length_int=360;}
+      userTargetValues[parsedMessage.clientId].length_int = length_int;
     }
 
     else {
@@ -431,12 +485,7 @@ wss.on('connection', (ws) => {
 
   // WebSocket connection closing
   ws.on('close', () => {
-    targetDate = '';
-    resetTargetMachine();
-    length_int=1;
-    datesFilePath = path.join('server/data',targetMachine,'dates.json');
-    targetDate = '';
-    logger.info('WebSocket client disconnected, reseting var values ');
+    logger.info('WebSocket client disconnected');
   });
 });
 

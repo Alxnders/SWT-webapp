@@ -97,6 +97,7 @@ function addChart(divId, clientId, websocket) {
             };
             websocket.send(JSON.stringify(message));
             console.log("message sent");
+            cond=false;
           }
 
           else {

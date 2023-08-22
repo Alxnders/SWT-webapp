@@ -1,4 +1,4 @@
-export function populateDropdown(dates, clientId, socket) {
+export function populateDropdown(dates, clientId, socket, bool) {
     const dayDropdown = document.getElementById('dayDropdown');
   
     // Clear previous options
@@ -13,6 +13,7 @@ export function populateDropdown(dates, clientId, socket) {
     });
   
     // Add event listener to the dropdown list
+    if(bool) {
     dayDropdown.addEventListener('change', () => {
       const selectedDate = dayDropdown.value;
 
@@ -23,6 +24,7 @@ export function populateDropdown(dates, clientId, socket) {
       console.log(clientId + " is sending date : " + selectedDate);
       socket.send(JSON.stringify(message));
     });
+    }
   }
   
   export function populateMachinesDropdown(machinesData, clientId, socket) {
