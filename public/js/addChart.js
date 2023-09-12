@@ -22,7 +22,7 @@ function addChart(divId, clientId, websocket) {
       // Create y-axis dropdown list
         const yAxisDropdown = document.createElement('select');
         yAxisDropdown.id = 'yaxis-'+divId;
-        populateDropdown(yAxisDropdown, ["time","batch","cycle","phase","en","rp","ec","cur","prs_md","prs_pf","vol_di","vol_rg","vol_fw","ec delta"]);
+        populateDropdown(yAxisDropdown, ["time","batch","cycle","phase","en","rp","ec","cur","prs_md","prs_pf","vol_di","vol_rg","vol_fw","ec delta","q_charge"]);
 
       // Create y2-axis dropdown list for another variable
         const y2AxisDropdown = document.createElement('select');
@@ -54,7 +54,6 @@ function addChart(divId, clientId, websocket) {
         imageElement.src = "/loading";
 
         if (selectedXAxisValue === "time" && selectedYAxisValue === "ec delta") {
-          const delta = true;
           const message = {
             plot: "ec_delta",
             xSelected: selectedXAxisValue,
@@ -72,6 +71,37 @@ function addChart(divId, clientId, websocket) {
               const cacheBuster = Date.now();
 
               imageElement.id = 'imageIdDelta';
+              imageElement.src = `/image/plot.png?${cacheBuster}`;
+              imageElement.className = "plot"
+
+              divElement.appendChild(imageElement);
+            }
+            else if(event.data.startsWith('Error')) {
+              imageElement.src = "/error";
+              divElement.appendChild(imageElement);
+              console.log(event.data);
+            }
+          };
+        }
+
+        else if (selectedXAxisValue === "time" && selectedYAxisValue === "q_charge") {
+          const message = {
+            plot: "q_charge",
+            xSelected: selectedXAxisValue,
+            ySelected: selectedYAxisValue,
+            clientId: clientId,
+          };
+          websocket.send(JSON.stringify(message));
+          console.log("message sent");
+        
+          websocket.onmessage = (event) => {
+            const message = event.data;
+        
+            if (event.data === '/image/plot.png') {
+              console.log("img received");
+              const cacheBuster = Date.now();
+
+              imageElement.id = 'imageIdCharge';
               imageElement.src = `/image/plot.png?${cacheBuster}`;
               imageElement.className = "plot"
 
