@@ -387,6 +387,63 @@ wss.on('connection', (ws) => {
       });
     }
 
+    else if (parsedMessage.plot == "ec_int") {
+      // Get the path to the dates.json file
+      const datesFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/dates.json`;
+    
+      // Read the dates.json file
+      fs.readFile(datesFilePath, 'utf8', (err, data) => {
+        if (err) {
+          console.error(`Error reading dates.json file: ${err}`);
+          return;
+        }
+    
+        try {
+          const dates = JSON.parse(data);
+    
+          // Find the index of the targetDate
+          const targetIndex = dates.findIndex(date => date === userTargetValues[parsedMessage.clientId].targetDate);
+    
+          if (targetIndex !== -1 && targetIndex + 1 < dates.length) {
+            const endDateIndex = targetIndex + userTargetValues[parsedMessage.clientId].length_int;
+            const endDate = dates[endDateIndex] || dates[dates.length - 1];
+    
+            const dataFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/prep.dat`;
+            const pythonScriptPath = 'server/ec_int.py';
+
+            const pythonProcess = spawn('python', [pythonScriptPath, dataFilePath, userTargetValues[parsedMessage.clientId].targetDate, endDate]);
+    
+            pythonProcess.stdout.on('data', (data) => {
+              console.log(`Python script output: ${data}`);
+            });
+    
+            pythonProcess.stderr.on('data', (data) => {
+              console.error(`Error executing Python script: ${data}`);
+            });
+    
+            pythonProcess.on('close', (code) => {
+              console.log(`Python script exited with code ${code}`);
+              if(code != 0) {
+                sendToClient(parsedMessage.clientId, `Error : Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`)
+              }
+              else {
+                const imagePath = '/image/plot.png';
+                sendToClient(parsedMessage.clientId, imagePath);
+              }
+            });
+          } 
+          
+          else {
+            console.error(`Target date '${userTargetValues[parsedMessage.clientId].targetDate}' or corresponding end date not found in dates.json`);
+          }
+        } 
+        
+        catch (error) {
+          console.error(`Error parsing dates.json: ${error}`);
+        }
+      });
+    }
+
     else if (parsedMessage.plot == "plot") {
       // Get the path to the dates.json file
       const datesFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/dates.json`;

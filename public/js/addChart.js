@@ -22,7 +22,7 @@ function addChart(divId, clientId, websocket) {
       // Create y-axis dropdown list
         const yAxisDropdown = document.createElement('select');
         yAxisDropdown.id = 'yaxis-'+divId;
-        populateDropdown(yAxisDropdown, ["time","batch","cycle","phase","en","rp","ec","cur","prs_md","prs_pf","vol_di","vol_rg","vol_fw","ec delta","q_charge"]);
+        populateDropdown(yAxisDropdown, ["time","batch","cycle","phase","en","rp","ec","cur","prs_md","prs_pf","vol_di","vol_rg","vol_fw","ec delta","q_charge","ec_int"]);
 
       // Create y2-axis dropdown list for another variable
         const y2AxisDropdown = document.createElement('select');
@@ -102,6 +102,37 @@ function addChart(divId, clientId, websocket) {
               const cacheBuster = Date.now();
 
               imageElement.id = 'imageIdCharge';
+              imageElement.src = `/image/plot.png?${cacheBuster}`;
+              imageElement.className = "plot"
+
+              divElement.appendChild(imageElement);
+            }
+            else if(event.data.startsWith('Error')) {
+              imageElement.src = "/error";
+              divElement.appendChild(imageElement);
+              console.log(event.data);
+            }
+          };
+        }
+
+        else if (selectedXAxisValue === "time" && selectedYAxisValue === "ec_int") {
+          const message = {
+            plot: "ec_int",
+            xSelected: selectedXAxisValue,
+            ySelected: selectedYAxisValue,
+            clientId: clientId,
+          };
+          websocket.send(JSON.stringify(message));
+          console.log("message sent");
+        
+          websocket.onmessage = (event) => {
+            const message = event.data;
+        
+            if (event.data === '/image/plot.png') {
+              console.log("img received");
+              const cacheBuster = Date.now();
+
+              imageElement.id = 'imageIdEcInt';
               imageElement.src = `/image/plot.png?${cacheBuster}`;
               imageElement.className = "plot"
 
