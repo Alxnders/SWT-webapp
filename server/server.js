@@ -61,12 +61,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-let targetDate = '';
-let targetMachine = ''; 
-let length_int = 1; //length of the data to display, initialized at 1 day
-
-let datesFilePath = path.join('server/data',targetMachine,'dates.json');
-
 // ----- Routes -----
 // Create route to handle fetching dates
 app.get('/dates', (req, res) => {
@@ -89,6 +83,7 @@ app.get('/dates', (req, res) => {
     }
   });
 });
+
 
 // Route to fetch machine names
 app.get('/machines', (req, res) => {
@@ -173,9 +168,6 @@ const resetTargetMachine = (id) => {
             console.error('Error parsing machine names data:', error);
           }
         });
-
-        
-        
       }
     } 
     catch (error) {
@@ -193,6 +185,26 @@ const server = app.listen(port, ipAddress, () => {
   logger.info(`Server is running on http://${ipAddress}:${port}`);
   processDirectories('server/data');
   saveMachineNamesToJson();
+  targetDate = '';
+  length_int=1;
+
+  const machinesFilePath = 'server/data/machines.json';
+  fs.readFile(machinesFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    try {
+      const machines = JSON.parse(data);
+      if (machines.length > 0) {
+        datesFilePath = path.join('server/data/', machines[0], '/dates.json');
+      }
+    }
+    catch (error) {
+      console.error('Error parsing machine names data:', error);
+      datesFilePath = path.join('server/data/', 'f10.2.2.34', '/dates.json');
+    }
+  });  
 });
 
 
@@ -205,15 +217,15 @@ wss.on('connection', (ws) => {
   const clientId = uuidv4();
   ws.clientId = clientId;
 
-  targetDate = '';
-  resetTargetMachine(clientId);
-  length_int=1;
-
   userTargetValues[clientId] = {
     targetDate: '',
     targetMachine: '',
     length_int: 1,
   };
+  resetTargetMachine(clientId);
+  
+
+  
 
   logger.info('WebSocket client connected with id: ' + clientId);
 
@@ -408,6 +420,9 @@ wss.on('connection', (ws) => {
             const endDateIndex = targetIndex + userTargetValues[parsedMessage.clientId].length_int;
             const endDate = dates[endDateIndex] || dates[dates.length - 1];
     
+            console.log(userTargetValues[parsedMessage.clientId].targetDate)
+            console.log(endDate)
+
             const dataFilePath = `server/data/${userTargetValues[parsedMessage.clientId].targetMachine}/prep.dat`;
             const pythonScriptPath = 'server/ec_int.py';
 
