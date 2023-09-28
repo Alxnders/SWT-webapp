@@ -104,13 +104,10 @@ ax6 = ax5.twinx()
 ax6.plot(t_int,eff,color='black', label='η efficiency')
 ax6.set_ylabel('η efficiency', color='black')
 
+plt.axhline(y=statistics.mean(eff), color='red', linestyle='--', label='Avg Efficiency')
+
 # Afficher le titre du graphique
-plt.title('Charge over Time')
+plt.title('Avg. efficiency : ~' + str(np.round(statistics.mean(eff),3)*100) + "%")
 
 # Afficher le graphique
 plt.show()
-
-print("Avg Q_salt per cycle : "+ str(float(statistics.mean(Q_salt))))
-print("Avg Q per cycle : "+ str(float(statistics.mean(cur_int))))
-
-print("Avg efficiency per cycle : " + str(float(statistics.mean(Q_salt))/float(statistics.mean(cur_int))))
