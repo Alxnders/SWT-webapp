@@ -104,6 +104,5 @@ img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img')
 os.makedirs(img_dir, exist_ok=True)
 img_path = os.path.join(img_dir, 'plot.png')
 plt.savefig(img_path)
-plt.show()
 
 print('Plot image saved:', img_path)

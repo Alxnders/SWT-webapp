@@ -49,6 +49,8 @@ cur_area = 0
 vol_d=[]
 vol=[]
 
+ec = [x / 1e3 for x in ec] # Converts ec from mS/m to S/m
+
 # Parcourir les données pour créer des segments
 for i in range(1, len(t)):
     if p[i-1] != p[i] == 'pr-deionize' :
@@ -58,8 +60,8 @@ for i in range(1, len(t)):
 
     if i+1 < len(t) and p[i+1] != p[i] == 'pr-deionize':
         t_int.append(t[i])
-        ec_int.append(ec_area)
-        cur_int.append(cur_area)
+        ec_int.append(ec_area) #unit : S*s/m [Siemmens * seconds * meters⁻1]
+        cur_int.append(cur_area) #
         ec_area = 0
         cur_area = 0
         vol.append(statistics.mean(vol_d))
@@ -68,7 +70,7 @@ for i in range(1, len(t)):
         ec_area += (ec[i]) * (t[i] - t[i-1]).total_seconds()
         cur_area += np.abs(cur[i] * (t[i] - t[i-1]).total_seconds())
 
-for i in range(0,len(t_tot)):
+for i in range(0,len(t_int)):
     int_tot.append(ec_tot[i]*(t_int[i]-t_tot[i]).total_seconds())
 
 for i in range (0, len(ec_int)):
@@ -77,10 +79,11 @@ for i in range (0, len(ec_int)):
 Fc = 96485 #(C/mol)
 
 Q_salt=[]
-x=0.8*(10**-5)
+x=0.8
+M=58.44
 
 for i in range(0,len(rem)) :
-    Q_salt.append(vol[i]*(rem[i]/1000)*Fc*x) #vol in L ; rem in mg/L converted to g/L ; Fc in C/mol ; x suppos. mol/g >>> 10^-5 problem
+    Q_salt.append(vol[i]*(rem[i]/1000)*Fc*x*(1/M)) #vol in L ; rem*x in ppm or mg/L ; Fc in C/mol ; M in g/mol
 
 eff=[]
 for i in range(0,len(Q_salt)) :
@@ -106,8 +109,14 @@ ax6.set_ylabel('η efficiency', color='black')
 
 plt.axhline(y=statistics.mean(eff), color='red', linestyle='--', label='Avg Efficiency')
 
-# Afficher le titre du graphique
+ax6.legend(loc='upper right')
+
+
 plt.title('Avg. efficiency : ~' + str(np.round(statistics.mean(eff),3)*100) + "%")
 
-# Afficher le graphique
-plt.show()
+img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img')
+os.makedirs(img_dir, exist_ok=True)
+img_path = os.path.join(img_dir, 'plot.png')
+plt.savefig(img_path)
+
+print('Plot image saved:', img_path)

@@ -55,7 +55,7 @@ plt.subplots_adjust(left=0.1, bottom=0.1, right=0.95, top=0.95)
 ax1 = plt.subplot(1, 1, 1)
 
 # Tracé principal avec l'axe x pour t
-ax1.plot(t, ec, color='orange', label='ec (µS/cm)')
+ax1.plot(t, ec, color='orange', label='ec')
 ax1.set_xlabel('Time (s)')
 ax1.set_ylabel('ec', color='orange')
 
@@ -92,10 +92,17 @@ for i in range(1, len(t)):
             segment_ec = []
 
 for i in range(0,len(t_tot)):
-    int_tot.append(ec_tot[i]*(t_int[i]-t_tot[i]).total_seconds())
+    int_tot.append((ec_tot[i]*(t_int[i]-t_tot[i]).total_seconds()))
 
 for i in range (0, len(ec_int)):
-    rem.append(int_tot[i] - ec_int[i])
+    rem.append(0.8*(int_tot[i] - ec_int[i]))
+
+for i in range(0,len(ec_int)) :
+    ec_int[i]*=0.8
+
+for i in range(0,len(int_tot)) :
+    ec_int[i]*=0.8
+
 
 # Créez un deuxième axe y partageant le même axe x que pour le premier axe
 ax2 = ax1.twinx()
@@ -118,7 +125,11 @@ ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
 ax1.grid(axis='y')
 ax1.yaxis.set_major_locator(ticker.MaxNLocator(20))
 
-plt.title("Avg. removed salts (mg/L) : " + str(statistics.mean(rem)/1000)+ "g/L")
+plt.title("Avg. removed salts (mg/L) : " + str(np.round((statistics.mean(rem)/1000),3))+ " g/L")
 
-# Afficher le tracé
-plt.show()
+img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'img')
+os.makedirs(img_dir, exist_ok=True)
+img_path = os.path.join(img_dir, 'plot.png')
+plt.savefig(img_path)
+
+print('Plot image saved:', img_path)
